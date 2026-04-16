@@ -31,17 +31,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS for Next.js integration
+# Configure CORS - Allow all origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-        os.getenv("NEXT_APP_URL", "http://localhost:3000"),
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],  # Allow requests from any URL
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -293,12 +287,17 @@ if __name__ == "__main__":
     import uvicorn
     
     port = int(os.getenv("PORT", 8000))
-    host = os.getenv("HOST", "127.0.0.1")
+    # Default to 0.0.0.0 for cloud deployment (Railway, Heroku, etc.)
+    # Override with HOST env var if needed
+    environment = os.getenv("ENVIRONMENT", "production")
+    default_host = "127.0.0.1" if environment == "development" else "0.0.0.0"
+    host = os.getenv("HOST", default_host)
     
     logger.info(f"Starting Invoice PDF Processor Service on {host}:{port}")
+    logger.info(f"Environment: {environment}")
     uvicorn.run(
         "main:app",
         host=host,
         port=port,
-        reload=os.getenv("ENVIRONMENT", "production") == "development"
+        reload=environment == "development"
     )
